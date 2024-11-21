@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <main id="main-holder">
+        <a href="#" id="logout" style="opacity: 0;">Logout</a>
+        <h1 id="login-header">Login</h1>
+        <div id="login-error-msg-holder">
+            <p id="login-error-msg" style="opacity: 0;">Invalid username <span id="error-msg-second-line">and/or password</span></p>
+        </div>
+        <form id="login-form">
+            <input type="text" name="login" id="username-field" class="login-form-field" placeholder="Username">
+            <input type="password" name="password" id="password-field" class="login-form-field" placeholder="Password">
+            <input type="submit" value="Login" id="login-form-submit">
+        </form>
+    </main>
+</body>
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #3a3a3a;
+    }
+
+    #main-holder {
+        width: 400px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #login-header {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .login-form-field {
+        width: 94%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    #login-form-submit {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #3a3a3a;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #login-form-submit:hover {
+        background-color: #2c2c2c;
+    }
+
+    #logout {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #3a3a3a;
+        text-decoration: none;
+    }
+
+    #login-error-msg {
+        color: #8a0000;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+</style>
+
+<script>
+    const loginForm = document.getElementById("login-form");
+    const loginButton = document.getElementById("login-form-submit");
+    const loginErrorMsg = document.getElementById("login-error-msg");
+    const logoutLink = document.getElementById("logout");
+
+    let token = localStorage.getItem('jwtToken');
+
+    if (token) {
+        axios.get('/', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then((response) => {
+            const { username } = response.data;
+            if (username) {
+                const mainHolder = document.getElementById("main-holder");
+                const loginHeader = document.getElementById("login-header");
+                loginForm.style.display = "none";
+                loginHeader.innerHTML = `Hello ${username}`;
+                logoutLink.style.opacity = 1;
+            }
+        }).catch(() => {
+            localStorage.removeItem('jwtToken');
+        });
+    }
+
+    logoutLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        localStorage.removeItem('jwtToken');
+        location.reload();
+    });
+
+    loginButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        const login = loginForm.login.value;
+        const password = loginForm.password.value;
+
+        axios.post('/api/login', { login, password })
+            .then((response) => {
+                const token = response.data.token;
+                localStorage.setItem('jwtToken', token);
+                location.reload();
+            })
+            .catch(() => {
+                loginErrorMsg.style.opacity = 1;
+            });
+    });
+</script>
+</html>
